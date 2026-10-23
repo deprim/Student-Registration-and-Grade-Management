@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}Create an account · Campus{% endblock %}
+{% block content %}
+  <section class="auth-card">
+    <div class="eyebrow">STUDENT REGISTRATION</div>
+    <h1>Create your account</h1>
+    <p class="text-muted mb-4">Register as a student. An administrator will review your application.</p>
+    <form method="post">
+      {% csrf_token %}
+      {% include 'core/form_fields.html' %}
+      <button class="btn btn-primary w-100" type="submit">Create student account →</button>
+    </form>
+    <p class="auth-note">
+      Already have an account? <a href="{% url 'accounts:login' %}">Sign in</a>
+    </p>
+  </section>
+{% endblock %}

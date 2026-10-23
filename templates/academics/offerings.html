@@ -1,0 +1,54 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }} · Campus{% endblock %}
+{% block content %}
+  <div class="page-heading">
+    <div>
+      <div class="eyebrow">COURSE DIRECTORY</div>
+      <h1>{{ title }}</h1>
+      <p>{{ description }}</p>
+    </div>
+    <span class="count-label">{{ page_obj.paginator.count }} course{{ page_obj.paginator.count|pluralize }}</span>
+  </div>
+  {% include 'core/filters.html' %}
+  <div class="course-grid">
+    {% for offering in page_obj %}
+      <article class="course-card">
+        <div class="course-card-top">
+          <span class="course-index" aria-hidden="true">{{ forloop.counter|stringformat:"02d" }}</span>
+          <span class="course-code">{{ offering.course.code }}</span><span class="badge-soft {% if offering.status == 'ARCHIVED' %}neutral{% endif %}">{{ offering.get_status_display }}</span>
+        </div>
+        <div class="course-content">
+          <h2>{{ offering.course.title }}</h2>
+          <p class="course-description">
+            {{ offering.course.description|truncatewords:24|default:'Build your knowledge, one subject at a time.' }}
+          </p>
+        </div>
+        <div class="course-meta">
+          <div>
+            <span class="meta-label">Teacher</span><span>{{ offering.teacher }}</span>
+          </div>
+          <div>
+            <span class="meta-label">Semester</span><span>{{ offering.semester }}</span>
+          </div>
+          <div>
+            <span class="meta-label">Capacity</span><span>{{ offering.available_places }} of {{ offering.capacity }} places available</span>
+          </div>
+        </div>
+        <a class="course-open"
+           href="{% if user.role == 'TEACHER' %}{% url 'teacher:gradebook' offering.pk %}{% else %}{% url 'student:offering' offering.pk %}{% endif %}">
+          {% if user.role == 'TEACHER' %}
+            Open gradebook
+          {% else %}
+            View course
+          {% endif %}
+          <span aria-hidden="true">↗</span></a>
+      </article>
+    {% empty %}
+      <section class="panel empty-state grid-full">
+        <h2>No courses found</h2>
+        <p>Try another search or check back when new courses are published.</p>
+      </section>
+    {% endfor %}
+  </div>
+  {% include 'core/pagination.html' %}
+{% endblock %}

@@ -1,0 +1,21 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }} · Campus{% endblock %}
+{% block content %}
+  <div class="page-heading">
+    <div>
+      <div class="eyebrow">CONFIRM ACTION</div>
+      <h1>{{ title }}</h1>
+      <p>{{ description|default:'Please confirm that you want to continue.' }}</p>
+    </div>
+  </div>
+  <section class="panel form-panel">
+    <form method="post">
+      {% csrf_token %}
+      {% include 'core/form_fields.html' %}
+      <div class="form-actions">
+        <button class="btn btn-primary" type="submit">Confirm action</button>
+        <a class="btn btn-light" href="{{ back_url }}">Cancel</a>
+      </div>
+    </form>
+  </section>
+{% endblock %}

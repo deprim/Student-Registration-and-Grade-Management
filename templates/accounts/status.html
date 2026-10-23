@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title %}Application status · Campus{% endblock %}
+{% block content %}
+  <div class="page-heading">
+    <div>
+      <div class="eyebrow">YOUR STUDENT ACCOUNT</div>
+      <h1>Application status</h1>
+      <p>Review the status of your student registration.</p>
+    </div>
+  </div>
+  <section class="panel form-panel">
+    <span class="badge-soft {% if user.approval_status == 'PENDING' %}warning{% elif user.approval_status == 'REJECTED' %}danger{% endif %}">{{ user.get_approval_status_display }}</span>
+    <h2 class="mt-4">
+      {% if user.approval_status == 'APPROVED' %}
+        You’re all set.
+      {% elif user.approval_status == 'REJECTED' %}
+        Your application was not approved.
+      {% else %}
+        Your application is being reviewed.
+      {% endif %}
+    </h2>
+    <p class="text-muted">
+      {% if user.approval_status == 'APPROVED' %}
+        Your student account is approved. You can now explore courses and enroll.
+      {% elif user.approval_status == 'REJECTED' %}
+        {{ user.rejection_reason }}
+      {% else %}
+        An administrator will review your account. Refresh this page to check for an update.
+      {% endif %}
+    </p>
+    {% if user.approval_status == 'APPROVED' %}
+      <a class="btn btn-primary" href="{% url 'home' %}">Open your workspace →</a>
+    {% else %}
+      <a class="btn btn-outline-secondary" href="{% url 'accounts:status' %}">Refresh status</a>
+    {% endif %}
+  </section>
+{% endblock %}

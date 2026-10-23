@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+{% block title %}
+  Overview · Campus
+</div>
+{% endblock %}
+{% block content %}
+  <div class="page-heading">
+    <div>
+      <div class="eyebrow">
+        {% if user.role == 'ADMIN' %}
+          ADMINISTRATION
+        {% elif user.role == 'TEACHER' %}
+          TEACHER WORKSPACE
+        {% else %}
+          STUDENT WORKSPACE
+        {% endif %}
+      </div>
+      <h1>Welcome back, {{ user.first_name|default:'there' }}.</h1>
+      <p>
+        {% if user.role == 'ADMIN' %}
+          An overview of your institution, at a glance.
+        {% elif user.role == 'TEACHER' %}
+          Your teaching, assessments, and student progress.
+        {% else %}
+          Your courses and progress, thoughtfully organized.
+        {% endif %}
+      </p>
+    </div>
+    <span class="date-label">{% now 'l, F j' %}</span>
+  </div>
+  <section class="workspace-brief" aria-label="Workspace actions">
+    <div>
+      <span class="brief-label">
+        {% if user.role == 'ADMIN' %}
+          REGISTRATION & RECORDS
+        {% elif user.role == 'TEACHER' %}
+          TEACHING & ASSESSMENT
+        {% else %}
+          YOUR NEXT STEP
+        {% endif %}
+      </span>
+      <p>
+        {% if user.role == 'ADMIN' %}
+          Review applications. Keep the semester moving.
+        {% elif user.role == 'TEACHER' %}
+          Good feedback starts with a clear record.
+        {% else %}
+          Make room for what comes next.
+        {% endif %}
+      </p>
+    </div>
+    <a class="btn btn-primary"
+       href="{% if user.role == 'ADMIN' %}{% url 'management:users' %}{% elif user.role == 'TEACHER' %}{% url 'teacher:offerings' %}{% else %}{% url 'student:catalog' %}{% endif %}">
+      {% if user.role == 'ADMIN' %}
+        Review applications
+      {% elif user.role == 'TEACHER' %}
+        Open assigned courses
+      {% else %}
+        Explore courses
+      {% endif %}
+      <span aria-hidden="true">→</span></a>
+  </section>
+  <div class="stats-grid">
+    {% for label, value in stats %}
+      <section class="stat-card">
+        <span class="stat-index" aria-hidden="true">0{{ forloop.counter }}</span><span class="stat-label">{{ label }}</span><strong>{{ value }}</strong>
+      </section>
+    {% endfor %}
+  </div>
+  <div class="dashboard-ledger {% if user.role == 'STUDENT' %}with-results{% endif %}">
+    <section class="panel course-ledger">
+      <div class="panel-heading">
+        <div>
+          <h2>
+            {% if user.role == 'TEACHER' %}
+              Your assigned courses
+            {% elif user.role == 'ADMIN' %}
+              Active course offerings
+            {% else %}
+              Your courses
+            {% endif %}
+          </h2>
+          <p>Course records for your workspace.</p>
+        </div>
+        <a class="text-link"
+           href="{% if user.role == 'ADMIN' %}{% url 'management:academic_list' 'offerings' %}{% elif user.role == 'TEACHER' %}{% url 'teacher:offerings' %}{% else %}{% url 'student:courses' %}{% endif %}">View all →</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead>
+            <tr>
+              <th scope="col">Course</th>
+              <th scope="col">Semester</th>
+              <th scope="col">Teacher</th>
+              <th scope="col">Status</th>
+              <th scope="col">
+                <span class="visually-hidden">Open</span>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for offering in offerings %}
+              <tr>
+                <td>
+                  <strong>{{ offering.course.title }}</strong><small class="table-subtitle">{{ offering.course.code }}</small>
+                </td>
+                <td>{{ offering.semester }}</td>
+                <td>{{ offering.teacher }}</td>
+                <td>
+                  <span class="badge-soft {% if offering.status == 'ARCHIVED' %}neutral{% endif %}">{{ offering.get_status_display }}</span>
+                </td>
+                <td>
+                  <a class="table-arrow"
+                     aria-label="Open {{ offering.course.title }}"
+                     href="{% if user.role == 'ADMIN' %}{% url 'management:gradebook' offering.pk %}{% elif user.role == 'TEACHER' %}{% url 'teacher:gradebook' offering.pk %}{% else %}{% url 'student:offering' offering.pk %}{% endif %}">↗</a>
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="5" class="empty-state">Your courses will appear here when they are available.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+    {% if user.role == 'STUDENT' %}
+      <section class="panel recent-panel">
+        <div class="panel-heading">
+          <div>
+            <h2>Recent grades</h2>
+            <p>Latest assessment results.</p>
+          </div>
+          <a class="text-link" href="{% url 'student:transcript' %}">View transcript →</a>
+        </div>
+        <div class="recent-list">
+          {% for grade in recent_grades %}
+            <div>
+              <span><strong>{{ grade.assessment.title }}</strong><small>{{ grade.enrollment.offering.course.title }}</small></span><span class="grade-pill">{{ grade.value }}<small>/10</small></span>
+            </div>
+          {% empty %}
+            <p class="empty-state">No grades yet. Your results will appear as your teachers record them.</p>
+          {% endfor %}
+        </div>
+      </section>
+    {% endif %}
+  </div>
+{% endblock %}

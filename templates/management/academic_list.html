@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }} · Campus{% endblock %}
+{% block content %}
+  <div class="page-heading">
+    <div>
+      <div class="eyebrow">ACADEMIC ADMINISTRATION</div>
+      <h1>{{ title }}</h1>
+      <p>Keep your academic structure organized and up to date.</p>
+    </div>
+    <a class="btn btn-primary"
+       href="{% url 'management:academic_create' kind %}">+ Create {{ kind|slice:':-1' }}</a>
+  </div>
+  {% include 'core/filters.html' %}
+  <section class="panel">
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead>
+          <tr>
+            {% for heading in headings %}<th scope="col">{{ heading }}</th>{% endfor %}
+            <th scope="col">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+            <tr>
+              {% for cell in row.cells %}<td>{{ cell }}</td>{% endfor %}
+              <td>
+                <div class="action-links">
+                  {% if kind == 'offerings' %}
+                    <a href="{% url 'management:gradebook' row.obj.pk %}">Gradebook</a>
+                  {% endif %}
+                  {% if not row.archived %}
+                    <a href="{% url 'management:academic_edit' kind row.obj.pk %}">Edit</a><a href="{% url 'management:academic_archive' kind row.obj.pk %}">Archive</a>
+                  {% else %}
+                    <span class="text-muted">Read-only</span>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="6" class="empty-state">No records yet. Create your first record to get started.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% include 'core/pagination.html' %}
+  </section>
+{% endblock %}

@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+{% block title %}Audit history · Campus{% endblock %}
+{% block content %}
+  <div class="page-heading">
+    <div>
+      <div class="eyebrow">ACTIVITY LOG</div>
+      <h1>Audit history</h1>
+      <p>Trace important account and academic changes.</p>
+    </div>
+  </div>
+  {% include 'core/filters.html' %}
+  <section class="panel">
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead>
+          <tr>
+            <th scope="col">When</th>
+            <th scope="col">Who</th>
+            <th scope="col">Action</th>
+            <th scope="col">Details</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for event in page_obj %}
+            <tr>
+              <td class="text-nowrap">{{ event.created_at|date:'M j, Y H:i' }}</td>
+              <td>
+                {{ event.actor }}<small class="table-subtitle">{{ event.actor.email }}</small>
+              </td>
+              <td>
+                <strong>{{ event.action }}</strong><small class="table-subtitle">{{ event.target }}</small>
+              </td>
+              <td>
+                <details>
+                  <summary>View changes</summary>
+                  <div class="audit-details">
+                    <strong>Before</strong><pre>{{ event.old_values }}</pre><strong>After</strong><pre>{{ event.new_values }}</pre>
+                    {% if event.reason %}
+                      <strong>Reason</strong>
+                      <p>{{ event.reason }}</p>
+                    {% endif %}
+                  </div>
+                </details>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="4" class="empty-state">No events match your search.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% include 'core/pagination.html' %}
+  </section>
+{% endblock %}

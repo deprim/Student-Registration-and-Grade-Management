@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+{% block title %}{{ offering.course.title }} · Campus{% endblock %}
+{% block content %}
+  <a class="back-link no-print" href="{% url 'student:courses' %}">← Back to courses</a>
+  <div class="page-heading">
+    <div>
+      <div class="eyebrow">{{ offering.course.code }} · {{ offering.semester }}</div>
+      <h1>{{ offering.course.title }}</h1>
+      <p>
+        {{ offering.teacher }} <span class="mx-2">·</span><span class="badge-soft">{{ offering.get_status_display }}</span>
+      </p>
+    </div>
+    {% if can_enroll or can_withdraw %}
+      <a class="btn {% if enrollment %}btn-outline-secondary{% else %}btn-primary{% endif %} no-print"
+         href="{% url 'student:enrollment_action' pk=offering.pk action=enrollment|yesno:'withdraw,enroll' %}">
+        {% if enrollment %}
+          Withdraw from course
+        {% else %}
+          Enroll in course →
+        {% endif %}
+      </a>
+    {% elif enrollment %}
+      <span class="badge-soft no-print">You are enrolled</span>
+    {% elif not offering.enrollment_is_open %}
+      <span class="badge-soft neutral no-print">Enrollment closed</span>
+    {% else %}
+      <span class="badge-soft warning no-print">Course full</span>
+    {% endif %}
+  </div>
+  <div class="detail-grid">
+    <section class="panel">
+      <h2>About this course</h2>
+      <p class="text-muted preserve-lines">
+        {{ offering.course.description|default:'No description has been added yet.' }}
+      </p>
+      <dl class="detail-list">
+        <div>
+          <dt>Enrollment opens</dt>
+          <dd>
+            {{ offering.enrollment_start|date:'M j, Y, H:i' }}
+          </dd>
+        </div>
+        <div>
+          <dt>Enrollment closes</dt>
+          <dd>
+            {{ offering.enrollment_end|date:'M j, Y, H:i' }}
+          </dd>
+        </div>
+        <div>
+          <dt>Available places</dt>
+          <dd>
+            {{ offering.available_places }} / {{ offering.capacity }}
+          </dd>
+        </div>
+      </dl>
+    </section>
+    {% if enrollment %}
+      <section class="panel result-card">
+        <div class="eyebrow">YOUR PROGRESS</div>
+        <div class="result-value">
+          {{ summary.average|default_if_none:'—' }}<span>/10</span>
+        </div>
+        <p>Current average · {{ summary.missing }} not graded</p>
+        <div class="final-result">
+          {% if summary.final %}
+            <span>Published final grade</span><strong>{{ summary.final.value }}/10</strong>
+          {% else %}
+            <span>Final grade</span><span class="badge-soft neutral">Not published</span>
+          {% endif %}
+        </div>
+      </section>
+    {% endif %}
+  </div>
+  {% if enrollment %}
+    <section class="panel mt-4">
+      <div class="panel-heading">
+        <div>
+          <h2>Assessments & grades</h2>
+          <p>All assessments contribute equally to your final grade.</p>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="table align-middle">
+          <thead>
+            <tr>
+              <th scope="col">Assessment</th>
+              <th scope="col">Due date</th>
+              <th scope="col">Grade</th>
+              <th scope="col">Teacher’s comment</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for assessment, grade in assessment_rows %}
+              <tr>
+                <td>
+                  <strong>{{ assessment.title }}</strong><small class="table-subtitle">{{ assessment.description }}</small>
+                </td>
+                <td>{{ assessment.due_date|date:'M j, Y'|default:'No due date' }}</td>
+                <td>
+                  {% if grade %}
+                    <span class="grade-pill">{{ grade.value }}<small>/10</small></span>
+                  {% else %}
+                    <span class="text-muted">Not graded</span>
+                  {% endif %}
+                </td>
+                <td>{{ grade.comment|default:'—' }}</td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="4" class="empty-state">No assessments have been added yet.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  {% endif %}
+{% endblock %}

@@ -1,0 +1,49 @@
+/* Shared Campus identity, retaining Django Admin's native controls and layout. */
+@font-face { font-family: "DM Sans"; src: url("../fonts/dm-sans-400.ttf") format("truetype"); font-weight: 400; font-display: swap; }
+@font-face { font-family: "Source Serif"; src: url("../fonts/source-serif-400.ttf") format("truetype"); font-weight: 400; font-display: swap; }
+:root, html[data-theme="light"] {
+    --primary: #173d33;
+    --secondary: #173d33;
+    --accent: #d9c797;
+    --primary-fg: #fffefa;
+    --body-fg: #24352f;
+    --body-bg: #f5f3ed;
+    --body-quiet-color: #5e6962;
+    --body-loud-color: #173d33;
+    --darkened-bg: #eeeee5;
+    --selected-bg: #e7eee6;
+    --selected-row: #e7eee6;
+    --hairline-color: #d7dcd3;
+    --border-color: #7b887d;
+    --link-fg: #173d33;
+    --link-hover-color: #0b2b22;
+    --link-selected-fg: #173d33;
+    --button-bg: #173d33;
+    --button-hover-bg: #0b2b22;
+    --default-button-bg: #173d33;
+    --default-button-hover-bg: #0b2b22;
+    --breadcrumbs-bg: #e7eee6;
+    --breadcrumbs-fg: #24352f;
+    --breadcrumbs-link-fg: #173d33;
+    --header-branding-color: #fffefa;
+    --header-color: #dce5de;
+    --font-family-primary: "DM Sans", system-ui, sans-serif;
+}
+#header { padding: 24px 40px; }
+#site-name a { display: flex; align-items: center; gap: 12px; font-family: "Source Serif", Georgia, serif; font-size: 30px; }
+#site-name span { font-family: "DM Sans", system-ui, sans-serif; font-size: 11px; letter-spacing: 1px; margin-left: 12px; }
+.brand-mark { width: 32px; height: 36px; }
+h1 { font-family: "Source Serif", Georgia, serif; font-size: 32px; font-weight: 400; }
+.module h2, .module caption, .inline-group h2 { border-radius: 2px; font-weight: 400; }
+.button, input[type="submit"], input[type="button"], .submit-row input, a.button { border-radius: 3px; min-height: 40px; }
+input, textarea, select { font-size: 14px; border-radius: 3px; }
+a:focus-visible, button:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid #a0472f; outline-offset: 3px; }
+@media (max-width: 767px) {
+    #header { padding: 20px; }
+    #site-name span { display: none; }
+    input, textarea, select { font-size: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { transition-duration: .01ms !important; animation-duration: .01ms !important; }
+}
+#changelist-filter li a { display: block; min-height: 32px; padding-top: 6px; padding-bottom: 6px; }

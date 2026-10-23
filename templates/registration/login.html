@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% block title %}Sign in · Campus{% endblock %}
+{% block content %}
+  <section class="auth-card">
+    <div class="eyebrow">WELCOME TO CAMPUS</div>
+    <h1>Sign in to your workspace</h1>
+    <p class="text-muted mb-4">Enter your account details to continue.</p>
+    <form method="post">
+      {% csrf_token %}
+      {% include 'core/form_fields.html' %}
+      {% if next %}<input type="hidden" name="next" value="{{ next }}">{% endif %}
+      <button class="btn btn-primary w-100" type="submit">Sign in to your workspace →</button>
+    </form>
+    <a class="small d-inline-block mt-3"
+       href="{% url 'accounts:password_reset' %}">Forgot your password?</a>
+    <p class="auth-note">
+      New here? <a href="{% url 'accounts:register' %}">Create a student account</a>
+    </p>
+  </section>
+{% endblock %}

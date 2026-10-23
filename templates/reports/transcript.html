@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% block title %}Academic transcript · Campus{% endblock %}
+{% block content %}
+  <div class="page-heading">
+    <div>
+      <div class="eyebrow">ACADEMIC RECORD</div>
+      <h1>Academic transcript</h1>
+      <p>{{ user.get_full_name }} · {{ user.student_profile.student_number }}</p>
+    </div>
+    <div class="d-flex gap-2 no-print">
+      <a class="btn btn-outline-secondary"
+         href="{% querystring format='csv' page=None %}">Export CSV ↗</a>
+      <button class="btn btn-primary" type="button" data-print>Print transcript</button>
+    </div>
+  </div>
+  {% include 'core/filters.html' %}
+  <section class="panel">
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead>
+          <tr>
+            <th scope="col">Course</th>
+            <th scope="col">Semester</th>
+            <th scope="col">Current average</th>
+            <th scope="col">Missing grades</th>
+            <th scope="col">Final grade</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for enrollment, summary in rows %}
+            <tr>
+              <td>
+                <a href="{% url 'student:offering' enrollment.offering_id %}"><strong>{{ enrollment.offering.course.title }}</strong></a><small class="table-subtitle">{{ enrollment.offering.course.code }}</small>
+              </td>
+              <td>{{ enrollment.offering.semester }}</td>
+              <td>{{ summary.average|default_if_none:'Not graded' }}</td>
+              <td>{{ summary.missing }}</td>
+              <td>
+                {% if summary.final %}
+                  <span class="grade-pill">{{ summary.final.value }}<small>/10</small></span>
+                {% else %}
+                  <span class="badge-soft neutral">Not published</span>
+                {% endif %}
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="5" class="empty-state">Your academic record starts with your first course enrollment.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% include 'core/pagination.html' %}
+  </section>
+  <p class="small text-muted mt-3">
+    Current averages reflect recorded assessment grades. Final grades are official only after teacher confirmation. Printing covers the current page; CSV includes all filtered records.
+  </p>
+{% endblock %}

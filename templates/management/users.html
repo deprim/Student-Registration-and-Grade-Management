@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% block title %}People & applications · Campus{% endblock %}
+{% block content %}
+  <div class="page-heading">
+    <div>
+      <div class="eyebrow">PEOPLE & ACCESS</div>
+      <h1>People & applications</h1>
+      <p>Welcome new students and manage your academic community.</p>
+    </div>
+    <a class="btn btn-primary" href="{% url 'management:teacher_create' %}">+ Create teacher</a>
+  </div>
+  <form method="get" class="filter-bar" role="search">
+    <label class="visually-hidden" for="people-search">Search people</label>
+    <input class="form-control"
+           id="people-search"
+           name="q"
+           value="{{ request.GET.q }}"
+           placeholder="Search name, email, or student number…">
+    <label class="visually-hidden" for="role-filter">Role</label>
+    <select class="form-select" id="role-filter" name="role">
+      <option value="">All roles</option>
+      <option value="STUDENT"
+              {% if request.GET.role == 'STUDENT' %}selected{% endif %}>Students</option>
+      <option value="TEACHER"
+              {% if request.GET.role == 'TEACHER' %}selected{% endif %}>Teachers</option>
+      <option value="ADMIN" {% if request.GET.role == 'ADMIN' %}selected{% endif %}>Administrators</option>
+    </select>
+    <label class="visually-hidden" for="status-filter">Application status</label>
+    <select class="form-select" id="status-filter" name="status">
+      <option value="">All applications</option>
+      <option value="PENDING"
+              {% if request.GET.status == 'PENDING' %}selected{% endif %}>Pending approval</option>
+      <option value="APPROVED"
+              {% if request.GET.status == 'APPROVED' %}selected{% endif %}>Approved</option>
+      <option value="REJECTED"
+              {% if request.GET.status == 'REJECTED' %}selected{% endif %}>Rejected</option>
+    </select>
+    <button class="btn btn-outline-secondary" type="submit">Filter</button>
+    <a class="btn btn-light" href="{{ request.path }}">Reset</a>
+  </form>
+  <section class="panel">
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead>
+          <tr>
+            <th scope="col">Person</th>
+            <th scope="col">Role / student number</th>
+            <th scope="col">Status</th>
+            <th scope="col">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for person in page_obj %}
+            <tr>
+              <td>
+                <strong>{{ person }}</strong><small class="table-subtitle">{{ person.email }}</small>
+              </td>
+              <td>
+                {{ person.get_role_display }}<small class="table-subtitle">{{ person.student_profile.student_number }}</small>
+              </td>
+              <td>
+                {% if not person.is_active %}
+                  <span class="badge-soft danger">Blocked</span>
+                {% else %}
+                  <span class="badge-soft {% if person.approval_status == 'PENDING' %}warning{% elif person.approval_status == 'REJECTED' %}danger{% endif %}">{{ person.get_approval_status_display }}</span>
+                {% endif %}
+              </td>
+              <td>
+                <div class="action-links">
+                  <a href="{% url 'management:user_edit' person.pk %}">Edit</a>
+                  {% if person.role == 'STUDENT' %}
+                    {% if person.approval_status != 'APPROVED' %}
+                      <a href="{% url 'management:user_action' person.pk 'approve' %}">Approve</a>
+                    {% endif %}
+                    {% if person.approval_status == 'PENDING' %}
+                      <a href="{% url 'management:user_action' person.pk 'reject' %}">Reject</a>
+                    {% endif %}
+                  {% endif %}
+                  {% if person.role != 'ADMIN' %}
+                    <a href="{% url 'management:user_action' person.pk person.is_active|yesno:'block,unblock' %}">
+                      {% if person.is_active %}
+                        Block
+                      {% else %}
+                        Unblock
+                      {% endif %}
+                    </a>
+                  {% endif %}
+                </div>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="4" class="empty-state">No people match your filters.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    {% include 'core/pagination.html' %}
+  </section>
+{% endblock %}

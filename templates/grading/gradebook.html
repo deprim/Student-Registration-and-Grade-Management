@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+{% block title %}{{ offering.course.title }} gradebook · Campus{% endblock %}
+{% block content %}
+  <div class="page-heading">
+    <div>
+      <div class="eyebrow">{{ offering.course.code }} · {{ offering.semester }}</div>
+      <h1>{{ offering.course.title }}</h1>
+      <p>
+        {{ offering.teacher }} · {{ offering.enrolled_count }} students · <span class="badge-soft">{{ offering.get_status_display }}</span>
+      </p>
+    </div>
+    <a class="btn btn-outline-secondary"
+       href="{% if user.role == 'ADMIN' %}{% url 'management:export' offering.pk %}{% else %}{% url 'teacher:export' offering.pk %}{% endif %}">Export CSV ↗</a>
+  </div>
+  <section class="panel mb-4">
+    <div class="panel-heading">
+      <div>
+        <h2>Assessments</h2>
+        <p>Equal weights. Grades from 1 to 10.</p>
+      </div>
+      {% if editable %}
+        <a class="btn btn-sm btn-primary"
+           href="{% url 'teacher:assessment_create' offering.pk %}">+ Add assessment</a>
+      {% endif %}
+    </div>
+    <div class="assessment-chips">
+      {% for assessment in assessments %}
+        <div class="assessment-chip">
+          <strong>{{ assessment.title }}</strong><small>{{ assessment.due_date|date:'M j, Y'|default:'No due date' }}</small>
+          {% if editable %}
+            <a href="{% url 'teacher:assessment_edit' offering.pk assessment.pk %}">Edit</a><a href="{% url 'teacher:assessment_delete' offering.pk assessment.pk %}">Delete</a>
+          {% endif %}
+        </div>
+      {% empty %}
+        <p class="text-muted mb-0">Add assessments to start building your gradebook.</p>
+      {% endfor %}
+    </div>
+  </section>
+  <section class="panel gradebook-panel">
+    <div class="panel-heading">
+      <div>
+        <h2>Student gradebook</h2>
+        <p>Save grades before confirming finals. Published finals lock a student’s results.</p>
+      </div>
+      {% if not editable %}<span class="badge-soft neutral">Read-only</span>{% endif %}
+    </div>
+    <form method="post" id="gradebook-form">
+      {% csrf_token %}{{ formset.management_form }}
+      {% if formset.non_form_errors %}
+        <div class="alert alert-danger">{{ formset.non_form_errors }}</div>
+      {% endif %}
+      {% if formset.total_error_count %}
+        <div class="alert alert-danger" role="alert">
+          Please correct the highlighted grades. No changes have been saved.
+        </div>
+      {% endif %}
+      <div class="table-responsive">
+        <table class="table gradebook-table align-middle">
+          <thead>
+            <tr>
+              <th scope="col">Student</th>
+              {% for assessment in assessments %}<th scope="col">{{ assessment.title }}</th>{% endfor %}
+              <th scope="col">Average</th>
+              <th scope="col">Final grade</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in rows %}
+              <tr>
+                <td class="student-cell">
+                  <strong>{{ row.enrollment.student }}</strong><small class="table-subtitle">{{ row.enrollment.student.student_profile.student_number }}</small>
+                </td>
+                {% for cell in row.cells %}
+                  <td class="grade-cell">
+                    {% if editable and not row.summary.final %}
+                      {{ cell.form.enrollment_id }}{{ cell.form.assessment_id }}
+                      <label class="visually-hidden" for="{{ cell.form.value.id_for_label }}">
+                        {{ row.enrollment.student }} — {{ cell.assessment.title }} grade
+                      </label>
+                      {{ cell.form.value }}
+                      {% if cell.form.value.errors %}
+                        <div class="text-danger small mt-1"
+                             id="{{ cell.form.value.auto_id }}_error"
+                             role="alert">
+                          {% for error in cell.form.value.errors %}<p class="mb-1">{{ error }}</p>{% endfor %}
+                        </div>
+                      {% endif %}
+                      <label class="visually-hidden" for="{{ cell.form.comment.id_for_label }}">
+                        {{ row.enrollment.student }} — {{ cell.assessment.title }} comment
+                      </label>
+                      {{ cell.form.comment }}
+                      {% if cell.form.comment.errors %}
+                        <div class="text-danger small mt-1"
+                             id="{{ cell.form.comment.auto_id }}_error"
+                             role="alert">
+                          {% for error in cell.form.comment.errors %}<p class="mb-1">{{ error }}</p>{% endfor %}
+                        </div>
+                      {% endif %}
+                      {% if cell.form.non_field_errors or cell.form.enrollment_id.errors or cell.form.assessment_id.errors %}
+                        <div class="text-danger small mt-1" role="alert">
+                          {{ cell.form.non_field_errors }}{{ cell.form.enrollment_id.errors }}{{ cell.form.assessment_id.errors }}
+                        </div>
+                      {% endif %}
+                    {% else %}
+                      {% if cell.grade %}
+                        <strong>{{ cell.grade.value }}/10</strong><small class="table-subtitle">{{ cell.grade.comment }}</small>
+                        {% if user.role == 'ADMIN' and not row.summary.final and offering.status == 'ACTIVE' %}
+                          <a class="small"
+                             href="{% url 'management:grade_clear' offering.pk cell.grade.pk %}">Clear grade</a>
+                        {% endif %}
+                      {% else %}
+                        <span class="text-muted">Not graded</span>
+                      {% endif %}
+                    {% endif %}
+                  </td>
+                {% endfor %}
+                <td>
+                  <strong>{{ row.summary.average|default_if_none:'—' }}</strong><small class="table-subtitle">{{ row.summary.missing }} missing</small>
+                </td>
+                <td>
+                  {% if row.summary.final %}
+                    <span class="grade-pill">{{ row.summary.final.value }}<small>/10</small></span><small class="table-subtitle">Published</small>
+                    {% if user.role == 'ADMIN' and offering.status == 'ACTIVE' %}
+                      <a class="small"
+                         href="{% url 'management:unpublish' offering.pk row.enrollment.pk %}">Unpublish</a>
+                    {% endif %}
+                  {% elif editable %}
+                    <span class="table-subtitle">Proposed: {{ row.summary.proposed|default_if_none:'—' }}</span><a class="btn btn-sm btn-light mt-2"
+   href="{% url 'teacher:publish' offering.pk row.enrollment.pk %}">Confirm final</a>
+                  {% else %}
+                    <span class="text-muted">Not published</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="100" class="empty-state">No students are enrolled in this offering yet.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% if editable and assessments and rows %}
+        <div class="gradebook-footer">
+          <span>Changes become visible to students when saved.</span>
+          <button class="btn btn-primary" type="submit">Save grades</button>
+        </div>
+      {% endif %}
+    </form>
+    {% include 'core/pagination.html' %}
+  </section>
+{% endblock %}

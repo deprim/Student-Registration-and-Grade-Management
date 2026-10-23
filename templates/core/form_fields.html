@@ -1,0 +1,26 @@
+{% if form.non_field_errors %}
+  <div class="alert alert-danger" role="alert">{{ form.non_field_errors }}</div>
+{% endif %}
+{% for field in form %}
+  {% if field.is_hidden %}
+    {{ field }}
+  {% else %}
+    <div class="mb-4 field-group{% if field.errors %} has-error{% endif %}">
+      <label class="form-label" for="{{ field.id_for_label }}">
+        {{ field.label }}
+        {% if field.field.required %}<span class="text-muted" aria-hidden="true">*</span>{% endif %}
+      </label>
+      {{ field }}
+      {% if field.help_text %}
+        <div class="form-text" id="{{ field.auto_id }}_helptext">{{ field.help_text|safe }}</div>
+      {% endif %}
+      {% if field.errors %}
+        <div class="text-danger small mt-1"
+             id="{{ field.auto_id }}_error"
+             role="alert">
+          {% for error in field.errors %}<p class="mb-1">{{ error }}</p>{% endfor %}
+        </div>
+      {% endif %}
+    </div>
+  {% endif %}
+{% endfor %}

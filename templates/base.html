@@ -1,0 +1,168 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#f5f3ed">
+    <link rel="preload"
+          href="{% static 'fonts/dm-sans-400.ttf' %}"
+          as="font"
+          type="font/ttf"
+          crossorigin>
+    <link rel="icon" href="{% static 'favicon.svg' %}" type="image/svg+xml">
+    <title>
+      {% block title %}Campus · Student Portal{% endblock %}
+    </title>
+    <link rel="stylesheet" href="{% static 'vendor/bootstrap.min.css' %}">
+    <link rel="stylesheet" href="{% static 'css/app.css' %}">
+    <script defer src="{% static 'vendor/bootstrap.bundle.min.js' %}"></script>
+    <script defer src="{% static 'js/app.js' %}"></script>
+  </head>
+  <body class="{% if not user.is_authenticated %}auth-page{% endif %}">
+    <a class="visually-hidden-focusable skip-link" href="#main-content">Skip to content</a>
+    {% if user.is_authenticated %}
+      <div class="mobile-header d-lg-none no-print">
+        <a class="brand" href="{% url 'home' %}">
+          {% include 'core/brand_mark.html' %}
+        Campus</a>
+        <button class="btn btn-outline-secondary"
+                type="button"
+                data-bs-toggle="offcanvas"
+                data-bs-target="#sidebar"
+                aria-controls="sidebar"
+                aria-label="Open navigation">Menu</button>
+      </div>
+      <aside class="offcanvas-lg offcanvas-start sidebar no-print"
+             tabindex="-1"
+             id="sidebar"
+             aria-labelledby="sidebar-label">
+        <div class="offcanvas-header">
+          <h2 class="h5" id="sidebar-label">Campus navigation</h2>
+          <button type="button"
+                  class="btn-close"
+                  data-bs-dismiss="offcanvas"
+                  data-bs-target="#sidebar"
+                  aria-label="Close navigation"></button>
+        </div>
+        <div class="offcanvas-body">
+          <a class="brand d-none d-lg-flex" href="{% url 'home' %}">
+            {% include 'core/brand_mark.html' %}
+          Campus</a>
+          <div class="workspace-label">ACADEMIC PORTAL</div>
+          <nav class="side-nav" aria-label="Main navigation">
+            <a href="{% url 'home' %}"
+               class="{% if request.path == '/student/' or request.path == '/teacher/' or request.path == '/management/' %}active{% endif %}">
+              {% include 'core/icon.html' with name='overview' %}
+            Overview</a>
+            {% if user.role == 'ADMIN' %}
+              <a href="{% url 'management:users' %}"
+                 class="{% if '/management/users/' in request.path %}active{% endif %}">
+                {% include 'core/icon.html' with name='people' %}
+              People & applications</a>
+              <a href="{% url 'management:academic_list' 'offerings' %}"
+                 class="{% if '/management/offerings/' in request.path %}active{% endif %}">
+                {% include 'core/icon.html' with name='book' %}
+              Course offerings</a>
+              <a href="{% url 'management:academic_list' 'courses' %}"
+                 class="{% if '/management/courses/' in request.path %}active{% endif %}">
+                {% include 'core/icon.html' with name='library' %}
+              Course library</a>
+              <a href="{% url 'management:academic_list' 'semesters' %}"
+                 class="{% if '/management/semesters/' in request.path %}active{% endif %}">
+                {% include 'core/icon.html' with name='calendar' %}
+              Semesters</a>
+              <a href="{% url 'management:audit' %}"
+                 class="{% if '/management/audit/' in request.path %}active{% endif %}">
+                {% include 'core/icon.html' with name='history' %}
+              Audit history</a>
+            {% elif user.role == 'TEACHER' %}
+              <a href="{% url 'teacher:offerings' %}"
+                 class="{% if '/teacher/offerings/' in request.path %}active{% endif %}">
+                {% include 'core/icon.html' with name='book' %}
+              Assigned courses</a>
+            {% elif user.approval_status == 'APPROVED' %}
+              <a href="{% url 'student:catalog' %}"
+                 class="{% if '/student/catalog/' in request.path %}active{% endif %}">
+                {% include 'core/icon.html' with name='library' %}
+              Course catalog</a>
+              <a href="{% url 'student:courses' %}"
+                 class="{% if '/student/courses/' in request.path or '/student/offerings/' in request.path %}active{% endif %}">
+                {% include 'core/icon.html' with name='book' %}
+              My courses</a>
+              <a href="{% url 'student:transcript' %}"
+                 class="{% if '/student/transcript/' in request.path %}active{% endif %}">
+                {% include 'core/icon.html' with name='record' %}
+              Academic transcript</a>
+            {% else %}
+              <a href="{% url 'accounts:status' %}" class="active">
+                {% include 'core/icon.html' with name='people' %}
+              Application status</a>
+            {% endif %}
+          </nav>
+          <div class="sidebar-bottom">
+            <div class="sidebar-caption">Your academic workspace</div>
+            <a class="profile-link" href="{% url 'accounts:profile' %}"><span class="avatar">{{ user.first_name|first|default:'U' }}{{ user.last_name|first }}</span><span><strong>{{ user.get_full_name|default:user.email }}</strong><small>{{ user.get_role_display }}</small></span></a>
+            <form method="post" action="{% url 'accounts:logout' %}">
+              {% csrf_token %}
+              <button class="logout-button" type="submit">
+                Sign out <span aria-hidden="true">↗</span>
+              </button>
+            </form>
+          </div>
+        </div>
+      </aside>
+    {% endif %}
+    <div class="{% if user.is_authenticated %}app-shell{% else %}auth-shell{% endif %}">
+      {% if user.is_authenticated %}
+        <header class="topbar no-print">
+          <span class="topbar-title">Campus <span aria-hidden="true">/</span> Academic management</span><a href="{% url 'accounts:profile' %}"><span class="status-dot"></span>{{ user.get_role_display }} workspace</a>
+        </header>
+      {% else %}
+        <header class="auth-header">
+          <a class="brand" href="{% url 'accounts:login' %}">
+            {% include 'core/brand_mark.html' %}
+            Campus</a><span class="text-muted small">STUDENT REGISTRATION & GRADE MANAGEMENT</span>
+          </header>
+        {% endif %}
+        {% if not user.is_authenticated %}
+          <aside class="auth-editorial" aria-label="About Campus">
+            <div class="eyebrow">THE CAMPUS PORTAL</div>
+            <p class="auth-statement">
+              Your academic life,
+              <br>
+              in good order.
+            </p>
+            <p class="auth-intro">
+              A considered space for learning.
+              <br>
+              From your first course to your final grade.
+            </p>
+            <div class="editorial-emblem" aria-hidden="true">{% include 'core/brand_mark.html' %}</div>
+            <ol class="auth-steps">
+              <li>
+                <span>01</span> Find your courses
+              </li>
+              <li>
+                <span>02</span> Follow your progress
+              </li>
+              <li>
+                <span>03</span> Keep your academic record
+              </li>
+            </ol>
+          </aside>
+        {% endif %}
+        <main id="main-content"
+              class="{% if user.is_authenticated %}main-content{% else %}auth-main{% endif %}">
+          {% for message in messages %}
+            <div class="alert {% if message.tags == 'error' %}alert-danger{% else %}alert-{{ message.tags|default:'info' }}{% endif %}"
+                 role="alert">{{ message }}</div>
+          {% endfor %}
+          {% block content %}{% endblock %}
+        </main>
+        <footer class="app-footer no-print">
+          <span>Campus · Academic records & registration</span><span>A clear view of your education.</span>
+        </footer>
+      </div>
+    </body>
+  </html>

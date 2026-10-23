@@ -1,0 +1,26 @@
+<form method="get" class="filter-bar no-print" role="search">
+  <div class="search-field">
+    <label class="visually-hidden" for="search">Search</label>
+    <input id="search"
+           name="q"
+           class="form-control"
+           placeholder="Search by name or code…"
+           value="{{ request.GET.q }}">
+  </div>
+  {% if semesters %}
+    <div>
+      <label class="visually-hidden" for="semester-filter">Semester</label>
+      <select class="form-select" id="semester-filter" name="semester">
+        <option value="">All semesters</option>
+        {% for semester in semesters %}
+          <option value="{{ semester.pk }}"
+                  {% if request.GET.semester == semester.pk|stringformat:'s' %}selected{% endif %}>
+            {{ semester }}
+          </option>
+        {% endfor %}
+      </select>
+    </div>
+  {% endif %}
+  <button class="btn btn-outline-secondary" type="submit">Apply filters</button>
+  {% if request.GET %}<a class="btn btn-light" href="{{ request.path }}">Reset</a>{% endif %}
+</form>
