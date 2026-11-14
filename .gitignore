@@ -15,9 +15,12 @@ backups/
 test-results/
 
 # Local AI agent configuration and instructions
+# Exception: the shared project guide /CLAUDE.md at the repository root is tracked.
 .agents/
 .codex/
 .claude/
 AGENTS.md
 CLAUDE.md
+!/CLAUDE.md
+CLAUDE.local.md
 GEMINI.md

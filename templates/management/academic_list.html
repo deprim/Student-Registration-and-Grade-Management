@@ -3,13 +3,15 @@
 {% block content %}
   <div class="page-heading">
     <div>
-      <div class="eyebrow">ACADEMIC ADMINISTRATION</div>
+      <div class="eyebrow">Academic setup: step {{ page.step }} of 3</div>
       <h1>{{ title }}</h1>
-      <p>Keep your academic structure organized and up to date.</p>
+      <p>{{ page.description }}</p>
     </div>
     <a class="btn btn-primary"
-       href="{% url 'management:academic_create' kind %}">+ Create {{ kind|slice:':-1' }}</a>
+       href="{% url 'management:academic_create' kind %}">+ {{ page.create }}</a>
   </div>
+  {% include 'management/setup_steps.html' %}
+  {% include 'management/prerequisites.html' %}
   {% include 'core/filters.html' %}
   <section class="panel">
     <div class="table-responsive">
@@ -23,7 +25,18 @@
         <tbody>
           {% for row in rows %}
             <tr>
-              {% for cell in row.cells %}<td>{{ cell }}</td>{% endfor %}
+              {% for cell in row.cells %}
+                <td>
+                  {% if cell.badge %}
+                    <span class="badge-soft badge-state {{ cell.tone }}">{{ cell.badge }}</span>
+                  {% elif cell.strong %}
+                    <strong>{{ cell.text }}</strong>
+                  {% else %}
+                    {{ cell.text }}
+                  {% endif %}
+                  {% if cell.detail %}<small class="table-subtitle">{{ cell.detail }}</small>{% endif %}
+                </td>
+              {% endfor %}
               <td>
                 <div class="action-links">
                   {% if kind == 'offerings' %}
@@ -39,7 +52,18 @@
             </tr>
           {% empty %}
             <tr>
-              <td colspan="6" class="empty-state">No records yet. Create your first record to get started.</td>
+              <td colspan="{{ headings|length|add:1 }}" class="empty-state">
+                {% if searching %}
+                  <span class="empty-title">No records match your search.</span>
+                  <a class="btn btn-sm btn-light" href="{{ request.path }}">Clear search</a>
+                {% else %}
+                  <span class="empty-title">{{ page.empty }}</span>
+                  {% if not prerequisites %}
+                    <a class="btn btn-sm btn-primary"
+                       href="{% url 'management:academic_create' kind %}">{{ page.create }}</a>
+                  {% endif %}
+                {% endif %}
+              </td>
             </tr>
           {% endfor %}
         </tbody>

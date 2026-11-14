@@ -1,0 +1,9 @@
+<nav aria-label="Academic setup steps" class="no-print">
+  <ol class="setup-steps">
+    {% for step in steps %}
+      <li>
+        <a href="{{ step.url }}" {% if step.current %}aria-current="page"{% endif %}><span class="step-number" aria-hidden="true">{{ step.number }}</span>{{ step.title }}</a>
+      </li>
+    {% endfor %}
+  </ol>
+</nav>

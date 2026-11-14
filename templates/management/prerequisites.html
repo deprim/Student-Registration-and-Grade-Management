@@ -1,0 +1,20 @@
+{% if prerequisites %}
+  <section class="callout warning" aria-labelledby="prerequisites-title">
+    <p>
+      <span class="callout-title" id="prerequisites-title">Before you create a course offering</span>
+      A course offering needs all three of the following. Complete the missing items first.
+    </p>
+    <ul class="checklist">
+      {% for item in prerequisites %}
+        <li>
+          {% if item.done %}
+            <span class="check-mark done" aria-hidden="true">✓</span><span>{{ item.label }}<span class="visually-hidden"> (done)</span></span>
+          {% else %}
+            <span class="check-mark todo" aria-hidden="true">!</span><span>{{ item.label }}<span class="visually-hidden"> (missing)</span></span>
+            <a href="{{ item.url }}">{{ item.action }} →</a>
+          {% endif %}
+        </li>
+      {% endfor %}
+    </ul>
+  </section>
+{% endif %}

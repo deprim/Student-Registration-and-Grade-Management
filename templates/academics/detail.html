@@ -1,13 +1,13 @@
 {% extends 'base.html' %}
 {% block title %}{{ offering.course.title }} · Campus{% endblock %}
 {% block content %}
-  <a class="back-link no-print" href="{% url 'student:courses' %}">← Back to courses</a>
+  <a class="back-link no-print" href="{{ back_url }}">← {{ back_label }}</a>
   <div class="page-heading">
     <div>
       <div class="eyebrow">{{ offering.course.code }} · {{ offering.semester }}</div>
       <h1>{{ offering.course.title }}</h1>
       <p>
-        {{ offering.teacher }} <span class="mx-2">·</span><span class="badge-soft">{{ offering.get_status_display }}</span>
+        {{ offering.teacher }} <span class="mx-2">·</span><span class="badge-soft {% if offering.status != 'ACTIVE' %}neutral{% endif %}">{{ offering.get_status_display }}</span>
       </p>
     </div>
     {% if can_enroll or can_withdraw %}
@@ -20,13 +20,49 @@
         {% endif %}
       </a>
     {% elif enrollment %}
-      <span class="badge-soft no-print">You are enrolled</span>
+      <span class="badge-soft badge-state enrolled no-print">You are enrolled</span>
     {% elif not offering.enrollment_is_open %}
-      <span class="badge-soft neutral no-print">Enrollment closed</span>
+      <span class="badge-soft badge-state neutral no-print">Enrollment closed</span>
     {% else %}
-      <span class="badge-soft warning no-print">Course full</span>
+      <span class="badge-soft badge-state warning no-print">Enrollment full</span>
     {% endif %}
   </div>
+  {% if withdraw_note %}
+    <div class="callout neutral no-print">
+      <p>
+        <span class="callout-title">You are enrolled in this course</span>
+        {{ withdraw_note }}
+      </p>
+    </div>
+  {% elif can_withdraw %}
+    <div class="callout no-print">
+      <p>
+        <span class="callout-title">You are enrolled in this course</span>
+        You can still withdraw until {{ window.closes }}, as long as no grade has been recorded for you.
+      </p>
+    </div>
+  {% elif not enrollment and can_enroll %}
+    <div class="callout no-print">
+      <p>
+        <span class="callout-title">Enrollment is open</span>
+        {{ offering.available_places }} of {{ offering.capacity }} places are available. {{ window.summary }}.
+      </p>
+    </div>
+  {% elif not enrollment and not offering.enrollment_is_open %}
+    <div class="callout neutral no-print">
+      <p>
+        <span class="callout-title">You cannot enroll right now</span>
+        {{ window.summary }}.
+      </p>
+    </div>
+  {% elif not enrollment %}
+    <div class="callout warning no-print">
+      <p>
+        <span class="callout-title">This course is full</span>
+        All {{ offering.capacity }} places are taken. A place becomes available again only if an enrolled student withdraws.
+      </p>
+    </div>
+  {% endif %}
   <div class="detail-grid">
     <section class="panel">
       <h2>About this course</h2>
@@ -56,18 +92,23 @@
     </section>
     {% if enrollment %}
       <section class="panel result-card">
-        <div class="eyebrow">YOUR PROGRESS</div>
+        <div class="eyebrow">Your progress</div>
         <div class="result-value">
           {{ summary.average|default_if_none:'—' }}<span>/10</span>
         </div>
-        <p>Current average · {{ summary.missing }} not graded</p>
+        <p>Current average · {{ summary.missing }} not yet graded</p>
         <div class="final-result">
           {% if summary.final %}
             <span>Published final grade</span><strong>{{ summary.final.value }}/10</strong>
           {% else %}
-            <span>Final grade</span><span class="badge-soft neutral">Not published</span>
+            <span>Final grade</span><span class="badge-soft neutral">Not yet published</span>
           {% endif %}
         </div>
+        {% if not summary.final %}
+          <p class="final-note">
+            Your teacher publishes the final grade after enrollment closes and every assessment has been graded.
+          </p>
+        {% endif %}
       </section>
     {% endif %}
   </div>
@@ -100,14 +141,14 @@
                   {% if grade %}
                     <span class="grade-pill">{{ grade.value }}<small>/10</small></span>
                   {% else %}
-                    <span class="text-muted">Not graded</span>
+                    <span class="text-muted">Not yet graded</span>
                   {% endif %}
                 </td>
                 <td>{{ grade.comment|default:'—' }}</td>
               </tr>
             {% empty %}
               <tr>
-                <td colspan="4" class="empty-state">No assessments have been added yet.</td>
+                <td colspan="4" class="empty-state">Your teacher has not added any assessments yet.</td>
               </tr>
             {% endfor %}
           </tbody>

@@ -3,7 +3,6 @@
 {% block content %}
   <div class="page-heading">
     <div>
-      <div class="eyebrow">COURSE DIRECTORY</div>
       <h1>{{ title }}</h1>
       <p>{{ description }}</p>
     </div>
@@ -14,8 +13,12 @@
     {% for offering in page_obj %}
       <article class="course-card">
         <div class="course-card-top">
-          <span class="course-index" aria-hidden="true">{{ forloop.counter|stringformat:"02d" }}</span>
-          <span class="course-code">{{ offering.course.code }}</span><span class="badge-soft {% if offering.status == 'ARCHIVED' %}neutral{% endif %}">{{ offering.get_status_display }}</span>
+          <span class="course-code">{{ offering.course.code }}</span>
+          {% if offering.availability %}
+            <span class="badge-soft badge-state {{ offering.availability_class }}">{{ offering.availability }}</span>
+          {% else %}
+            <span class="badge-soft {% if offering.status == 'ARCHIVED' %}neutral{% elif offering.status == 'DRAFT' %}warning{% endif %}">{{ offering.get_status_display }}</span>
+          {% endif %}
         </div>
         <div class="course-content">
           <h2>{{ offering.course.title }}</h2>
@@ -30,14 +33,25 @@
           <div>
             <span class="meta-label">Semester</span><span>{{ offering.semester }}</span>
           </div>
-          <div>
-            <span class="meta-label">Capacity</span><span>{{ offering.available_places }} of {{ offering.capacity }} places available</span>
-          </div>
+          {% if offering.window %}
+            <div>
+              <span class="meta-label">Enrollment</span><span>{{ offering.window.summary }}</span>
+            </div>
+            <div>
+              <span class="meta-label">Students</span><span>{{ offering.enrolled_count }} of {{ offering.capacity }} places taken</span>
+            </div>
+          {% else %}
+            <div>
+              <span class="meta-label">Capacity</span><span>{{ offering.available_places }} of {{ offering.capacity }} places available</span>
+            </div>
+          {% endif %}
         </div>
         <a class="course-open"
            href="{% if user.role == 'TEACHER' %}{% url 'teacher:gradebook' offering.pk %}{% else %}{% url 'student:offering' offering.pk %}{% endif %}">
           {% if user.role == 'TEACHER' %}
             Open gradebook
+          {% elif offering.availability == 'Open for enrollment' %}
+            View course and enroll
           {% else %}
             View course
           {% endif %}
@@ -45,8 +59,21 @@
       </article>
     {% empty %}
       <section class="panel empty-state grid-full">
-        <h2>No courses found</h2>
-        <p>Try another search or check back when new courses are published.</p>
+        {% if request.GET.q or request.GET.semester %}
+          <h2>No courses match your search</h2>
+          <p>Try another name or code, or choose All semesters.</p>
+          <a class="btn btn-light" href="{{ request.path }}">Clear search</a>
+        {% elif user.role == 'TEACHER' %}
+          <h2>No courses are assigned to you yet</h2>
+          <p>An administrator assigns course offerings to teachers. They will appear here.</p>
+        {% elif request.resolver_match.url_name == 'courses' %}
+          <h2>You are not enrolled in any course yet</h2>
+          <p>Browse the course catalog to find a course with open enrollment.</p>
+          <a class="btn btn-primary" href="{% url 'student:catalog' %}">Browse course catalog</a>
+        {% else %}
+          <h2>No courses are available right now</h2>
+          <p>New courses appear here when an administrator publishes them. Check back later.</p>
+        {% endif %}
       </section>
     {% endfor %}
   </div>

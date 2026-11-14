@@ -1,24 +1,53 @@
 {% extends 'base.html' %}
 {% block title %}{{ offering.course.title }} gradebook · Campus{% endblock %}
 {% block content %}
+  {% if user.role == 'ADMIN' %}
+    <a class="back-link no-print" href="{% url 'management:academic_list' 'offerings' %}">← Back to course offerings</a>
+  {% else %}
+    <a class="back-link no-print" href="{% url 'teacher:offerings' %}">← Back to assigned courses</a>
+  {% endif %}
   <div class="page-heading">
     <div>
       <div class="eyebrow">{{ offering.course.code }} · {{ offering.semester }}</div>
       <h1>{{ offering.course.title }}</h1>
-      <p>
-        {{ offering.teacher }} · {{ offering.enrolled_count }} students · <span class="badge-soft">{{ offering.get_status_display }}</span>
+      <p class="heading-meta">
+        <span>{{ offering.teacher }}</span><span aria-hidden="true">·</span><span>{{ offering.enrolled_count }} of {{ offering.capacity }} places taken</span>
+        <span class="badge-soft {% if offering.status != 'ACTIVE' %}neutral{% endif %}">{{ offering.get_status_display }}</span>
+        <span class="badge-soft badge-state {{ window.tone }}">Enrollment {{ window.label|lower }}</span>
       </p>
     </div>
     <a class="btn btn-outline-secondary"
        href="{% if user.role == 'ADMIN' %}{% url 'management:export' offering.pk %}{% else %}{% url 'teacher:export' offering.pk %}{% endif %}">Export CSV ↗</a>
   </div>
+  {% if read_only_reason %}
+    <div class="callout neutral">
+      <p>
+        <span class="callout-title">Read-only gradebook</span>
+        {{ read_only_reason }}
+      </p>
+    </div>
+  {% elif window.state == 'closed' %}
+    <div class="callout">
+      <p>
+        <span class="callout-title">{{ window.summary }}</span>
+        You can publish the final grade for each student whose assessments are all graded.
+      </p>
+    </div>
+  {% else %}
+    <div class="callout warning">
+      <p>
+        <span class="callout-title">{{ window.summary }}</span>
+        You can add assessments and enter grades now. Final grades can be published only after enrollment closes on {{ window.closes }}.
+      </p>
+    </div>
+  {% endif %}
   <section class="panel mb-4">
     <div class="panel-heading">
       <div>
         <h2>Assessments</h2>
-        <p>Equal weights. Grades from 1 to 10.</p>
+        <p>All assessments count equally. Grades are whole numbers from 1 to 10.</p>
       </div>
-      {% if editable %}
+      {% if can_manage_assessments %}
         <a class="btn btn-sm btn-primary"
            href="{% url 'teacher:assessment_create' offering.pk %}">+ Add assessment</a>
       {% endif %}
@@ -27,20 +56,37 @@
       {% for assessment in assessments %}
         <div class="assessment-chip">
           <strong>{{ assessment.title }}</strong><small>{{ assessment.due_date|date:'M j, Y'|default:'No due date' }}</small>
-          {% if editable %}
+          {% if can_manage_assessments %}
             <a href="{% url 'teacher:assessment_edit' offering.pk assessment.pk %}">Edit</a><a href="{% url 'teacher:assessment_delete' offering.pk assessment.pk %}">Delete</a>
           {% endif %}
         </div>
       {% empty %}
-        <p class="text-muted mb-0">Add assessments to start building your gradebook.</p>
+        <p class="text-muted mb-0">
+          {% if editable %}
+            No assessments yet. Add the first assessment to start building your gradebook.
+          {% else %}
+            No assessments have been added to this offering.
+          {% endif %}
+        </p>
       {% endfor %}
     </div>
+    {% if editable and assessments_locked %}
+      <p class="locked-note">
+        <strong>Assessments are locked</strong> because at least one final grade in this course is published. An administrator must unpublish all final grades in this course before assessments can be added, edited or deleted.
+      </p>
+    {% endif %}
   </section>
   <section class="panel gradebook-panel">
     <div class="panel-heading">
       <div>
         <h2>Student gradebook</h2>
-        <p>Save grades before confirming finals. Published finals lock a student’s results.</p>
+        <p>
+          {% if editable %}
+            Save grades first, then publish each student’s final grade. A published final grade locks that student’s grades.
+          {% else %}
+            Saved grades, averages and published final grades for every enrolled student.
+          {% endif %}
+        </p>
       </div>
       {% if not editable %}<span class="badge-soft neutral">Read-only</span>{% endif %}
     </div>
@@ -115,26 +161,36 @@
                   </td>
                 {% endfor %}
                 <td>
-                  <strong>{{ row.summary.average|default_if_none:'—' }}</strong><small class="table-subtitle">{{ row.summary.missing }} missing</small>
+                  <strong>{{ row.summary.average|default_if_none:'—' }}</strong><small class="table-subtitle">{{ row.summary.missing }} not graded</small>
                 </td>
                 <td>
-                  {% if row.summary.final %}
-                    <span class="grade-pill">{{ row.summary.final.value }}<small>/10</small></span><small class="table-subtitle">Published</small>
-                    {% if user.role == 'ADMIN' and offering.status == 'ACTIVE' %}
-                      <a class="small"
-                         href="{% url 'management:unpublish' offering.pk row.enrollment.pk %}">Unpublish</a>
+                  <div class="final-status">
+                    {% if row.summary.final %}
+                      <span class="grade-pill">{{ row.summary.final.value }}<small>/10</small></span>
+                      <span class="badge-soft badge-state enrolled">Published</span>
+                      {% if user.role == 'ADMIN' and offering.status == 'ACTIVE' %}
+                        <a class="small"
+                           href="{% url 'management:unpublish' offering.pk row.enrollment.pk %}">Unpublish</a>
+                      {% endif %}
+                    {% elif editable and row.publish.can_publish %}
+                      <span class="final-calculated">Final grade: <strong>{{ row.summary.proposed }}/10</strong></span>
+                      <a class="btn btn-sm btn-primary"
+                         href="{% url 'teacher:publish' offering.pk row.enrollment.pk %}">Publish final grade</a>
+                    {% elif editable %}
+                      <span class="badge-soft badge-state neutral">Not ready to publish</span>
+                      {% for reason in row.publish.reasons %}<p class="final-reason">{{ reason }}</p>{% endfor %}
+                    {% else %}
+                      <span class="badge-soft badge-state neutral">Not yet published</span>
                     {% endif %}
-                  {% elif editable %}
-                    <span class="table-subtitle">Proposed: {{ row.summary.proposed|default_if_none:'—' }}</span><a class="btn btn-sm btn-light mt-2"
-   href="{% url 'teacher:publish' offering.pk row.enrollment.pk %}">Confirm final</a>
-                  {% else %}
-                    <span class="text-muted">Not published</span>
-                  {% endif %}
+                  </div>
                 </td>
               </tr>
             {% empty %}
               <tr>
-                <td colspan="100" class="empty-state">No students are enrolled in this offering yet.</td>
+                <td colspan="100" class="empty-state">
+                  <span class="empty-title">No students are enrolled in this offering yet.</span>
+                  {% if window.state != 'closed' %}Students appear here as soon as they enroll.{% endif %}
+                </td>
               </tr>
             {% endfor %}
           </tbody>

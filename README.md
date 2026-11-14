@@ -5,7 +5,7 @@ A complete server-rendered Django application for student approval, course enrol
 ## Technology
 
 - Python 3.13 and Django 5.2 LTS
-- PostgreSQL 17 and psycopg 3
+- PostgreSQL 17 (Docker configuration; the project was verified locally with PostgreSQL 18.6) and psycopg 3
 - Django Templates, locally bundled Bootstrap 5.3.8, and vanilla JavaScript
 - Gunicorn, WhiteNoise, and Docker Compose
 
@@ -71,7 +71,7 @@ Demo dates are relative to the initial seed date. Running `seed_demo` again leav
 
 ## Manual setup
 
-Install Python 3.13 and PostgreSQL 17. Create a PostgreSQL role and database using your local PostgreSQL administrator account:
+Install Python 3.13 and PostgreSQL 17. The Docker configuration uses PostgreSQL 17; the current verification was run on a local PostgreSQL 18.6 installation (see [Verification Guide](docs/verification.md)). Create a PostgreSQL role and database using your local PostgreSQL administrator account:
 
 ```sql
 CREATE ROLE student_portal WITH LOGIN PASSWORD 'choose-a-local-password' CREATEDB;
@@ -120,7 +120,7 @@ Archive offerings only after enrollment closes and all enrolled students have pu
 
 Open **Assigned courses**, select a course, and add assessments. Enter grades and optional comments in the gradebook and select **Save grades**. One invalid entry rejects the whole batch. Students see saved grades immediately.
 
-Once enrollment closes and every assessment has a grade for a student, select **Confirm final**. Review the calculated result and confirm. Final publication locks that student's grades. If any final is published, the assessment structure and offering configuration are locked. Ask an administrator to unpublish the relevant finals before corrections.
+Once enrollment closes and every assessment has a grade for a student, select **Publish final grade**. Review the calculated result and confirm. Until then, the gradebook explains why a final cannot be published yet. Final publication locks that student's grades. If any final is published, the assessment structure and offering configuration are locked. Ask an administrator to unpublish the relevant finals before corrections.
 
 ### Student
 
@@ -172,6 +172,14 @@ ruff format --check accounts academics config core grading reports scripts manag
 ```
 
 Run browser checks against a running locally seeded app. Screenshots are saved in the ignored `test-results/` directory. Set `BROWSER_BASE_URL` to use a different address, or `BROWSER_EXECUTABLE` to use an existing Chromium installation. The checks cover desktop, tablet, and mobile at 1440, 1024, 768, and 375 pixels. Optionally set `BROWSER_AXE_SCRIPT` to the absolute path of a local axe-core script to include accessibility checks.
+
+Three Playwright end-to-end scenarios (academic lifecycle, role-based access and validation, grade correction) run on the isolated test database, not on a running server:
+
+```sh
+python manage.py test e2e --pattern="e2e_*.py" -v 2
+```
+
+They are not part of the normal `manage.py test` run. See [End-to-End Tests](docs/e2e-testing.md).
 
 The frontend design system, page inventory, component guidance, and audit approach are documented in [Visual Design](docs/visual-design.md). Fonts, icons, Bootstrap, and application assets are served locally.
 

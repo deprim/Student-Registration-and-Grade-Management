@@ -3,17 +3,26 @@
 {% block content %}
   <div class="page-heading">
     <div>
-      <div class="eyebrow">CONFIRM ACTION</div>
+      <div class="eyebrow">Confirm action</div>
       <h1>{{ title }}</h1>
       <p>{{ description|default:'Please confirm that you want to continue.' }}</p>
     </div>
   </div>
-  <section class="panel form-panel">
+  <section class="panel form-panel confirm-panel{% if danger %} is-danger{% endif %}">
+    {% if consequences %}
+      <div class="confirm-summary">
+        <h2>What happens when you confirm</h2>
+        <ul class="consequence-list">
+          {% for item in consequences %}<li>{{ item }}</li>{% endfor %}
+        </ul>
+      </div>
+    {% endif %}
     <form method="post">
       {% csrf_token %}
       {% include 'core/form_fields.html' %}
       <div class="form-actions">
-        <button class="btn btn-primary" type="submit">Confirm action</button>
+        <button class="btn {% if danger %}btn-danger{% else %}btn-primary{% endif %}"
+                type="submit">Confirm action</button>
         <a class="btn btn-light" href="{{ back_url }}">Cancel</a>
       </div>
     </form>

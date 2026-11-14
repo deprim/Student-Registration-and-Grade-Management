@@ -4,7 +4,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="theme-color" content="#f5f3ed">
+    <meta name="theme-color" content="#ffffff">
     <link rel="preload"
           href="{% static 'fonts/dm-sans-400.ttf' %}"
           as="font"
@@ -49,7 +49,6 @@
           <a class="brand d-none d-lg-flex" href="{% url 'home' %}">
             {% include 'core/brand_mark.html' %}
           Campus</a>
-          <div class="workspace-label">ACADEMIC PORTAL</div>
           <nav class="side-nav" aria-label="Main navigation">
             <a href="{% url 'home' %}"
                class="{% if request.path == '/student/' or request.path == '/teacher/' or request.path == '/management/' %}active{% endif %}">
@@ -60,18 +59,18 @@
                  class="{% if '/management/users/' in request.path %}active{% endif %}">
                 {% include 'core/icon.html' with name='people' %}
               People & applications</a>
-              <a href="{% url 'management:academic_list' 'offerings' %}"
-                 class="{% if '/management/offerings/' in request.path %}active{% endif %}">
-                {% include 'core/icon.html' with name='book' %}
-              Course offerings</a>
-              <a href="{% url 'management:academic_list' 'courses' %}"
-                 class="{% if '/management/courses/' in request.path %}active{% endif %}">
-                {% include 'core/icon.html' with name='library' %}
-              Course library</a>
               <a href="{% url 'management:academic_list' 'semesters' %}"
                  class="{% if '/management/semesters/' in request.path %}active{% endif %}">
                 {% include 'core/icon.html' with name='calendar' %}
               Semesters</a>
+              <a href="{% url 'management:academic_list' 'courses' %}"
+                 class="{% if '/management/courses/' in request.path %}active{% endif %}">
+                {% include 'core/icon.html' with name='library' %}
+              Course library</a>
+              <a href="{% url 'management:academic_list' 'offerings' %}"
+                 class="{% if '/management/offerings/' in request.path %}active{% endif %}">
+                {% include 'core/icon.html' with name='book' %}
+              Course offerings</a>
               <a href="{% url 'management:audit' %}"
                  class="{% if '/management/audit/' in request.path %}active{% endif %}">
                 {% include 'core/icon.html' with name='history' %}
@@ -116,18 +115,17 @@
     <div class="{% if user.is_authenticated %}app-shell{% else %}auth-shell{% endif %}">
       {% if user.is_authenticated %}
         <header class="topbar no-print">
-          <span class="topbar-title">Campus <span aria-hidden="true">/</span> Academic management</span><a href="{% url 'accounts:profile' %}"><span class="status-dot"></span>{{ user.get_role_display }} workspace</a>
+          <a href="{% url 'accounts:profile' %}"><span class="status-dot"></span>{{ user.get_role_display }} workspace</a>
         </header>
       {% else %}
         <header class="auth-header">
           <a class="brand" href="{% url 'accounts:login' %}">
             {% include 'core/brand_mark.html' %}
-            Campus</a><span class="text-muted small">STUDENT REGISTRATION & GRADE MANAGEMENT</span>
+            Campus</a><span class="text-muted small">Student registration and grade management</span>
           </header>
         {% endif %}
         {% if not user.is_authenticated %}
           <aside class="auth-editorial" aria-label="About Campus">
-            <div class="eyebrow">THE CAMPUS PORTAL</div>
             <p class="auth-statement">
               Your academic life,
               <br>
@@ -161,7 +159,7 @@
           {% block content %}{% endblock %}
         </main>
         <footer class="app-footer no-print">
-          <span>Campus · Academic records & registration</span><span>A clear view of your education.</span>
+          <span>Campus · Academic records & registration</span><span>Campus is a student group project, not an official TSI service.</span>
         </footer>
       </div>
     </body>

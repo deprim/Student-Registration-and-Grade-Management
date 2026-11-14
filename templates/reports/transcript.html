@@ -3,7 +3,6 @@
 {% block content %}
   <div class="page-heading">
     <div>
-      <div class="eyebrow">ACADEMIC RECORD</div>
       <h1>Academic transcript</h1>
       <p>{{ user.get_full_name }} · {{ user.student_profile.student_number }}</p>
     </div>
@@ -12,6 +11,12 @@
          href="{% querystring format='csv' page=None %}">Export CSV ↗</a>
       <button class="btn btn-primary" type="button" data-print>Print transcript</button>
     </div>
+  </div>
+  <div class="callout neutral no-print">
+    <p>
+      <span class="callout-title">When do final grades appear?</span>
+      Your teacher publishes a final grade after enrollment for the course has closed and every assessment has been graded. Until then, the course shows your current average and the final grade says Not yet published.
+    </p>
   </div>
   {% include 'core/filters.html' %}
   <section class="panel">
@@ -22,7 +27,7 @@
             <th scope="col">Course</th>
             <th scope="col">Semester</th>
             <th scope="col">Current average</th>
-            <th scope="col">Missing grades</th>
+            <th scope="col">Not yet graded</th>
             <th scope="col">Final grade</th>
           </tr>
         </thead>
@@ -33,19 +38,27 @@
                 <a href="{% url 'student:offering' enrollment.offering_id %}"><strong>{{ enrollment.offering.course.title }}</strong></a><small class="table-subtitle">{{ enrollment.offering.course.code }}</small>
               </td>
               <td>{{ enrollment.offering.semester }}</td>
-              <td>{{ summary.average|default_if_none:'Not graded' }}</td>
-              <td>{{ summary.missing }}</td>
+              <td>{{ summary.average|default_if_none:'No grades yet' }}</td>
+              <td>{{ summary.missing }} assessment{{ summary.missing|pluralize }}</td>
               <td>
                 {% if summary.final %}
                   <span class="grade-pill">{{ summary.final.value }}<small>/10</small></span>
                 {% else %}
-                  <span class="badge-soft neutral">Not published</span>
+                  <span class="badge-soft neutral">Not yet published</span>
                 {% endif %}
               </td>
             </tr>
           {% empty %}
             <tr>
-              <td colspan="5" class="empty-state">Your academic record starts with your first course enrollment.</td>
+              <td colspan="5" class="empty-state">
+                {% if request.GET.q or request.GET.semester %}
+                  <span class="empty-title">No courses match your filters.</span>
+                  <a class="btn btn-sm btn-light" href="{{ request.path }}">Clear filters</a>
+                {% else %}
+                  <span class="empty-title">Your academic record starts with your first course enrollment.</span>
+                  <a class="btn btn-sm btn-primary" href="{% url 'student:catalog' %}">Browse course catalog</a>
+                {% endif %}
+              </td>
             </tr>
           {% endfor %}
         </tbody>
@@ -54,6 +67,6 @@
     {% include 'core/pagination.html' %}
   </section>
   <p class="small text-muted mt-3">
-    Current averages reflect recorded assessment grades. Final grades are official only after teacher confirmation. Printing covers the current page; CSV includes all filtered records.
+    Current averages use only the grades recorded so far; assessments not yet graded never count as zero. Final grades are official only after your teacher publishes them. Printing covers the current page; CSV includes all filtered records.
   </p>
 {% endblock %}

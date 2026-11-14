@@ -3,11 +3,11 @@
 {% block content %}
   <div class="page-heading">
     <div>
-      <div class="eyebrow">WORKSPACE DETAILS</div>
       <h1>{{ title }}</h1>
       {% if description %}<p>{{ description }}</p>{% endif %}
     </div>
   </div>
+  {% include 'management/prerequisites.html' %}
   <section class="panel form-panel">
     <form method="post">
       {% csrf_token %}

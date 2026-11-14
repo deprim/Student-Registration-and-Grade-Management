@@ -3,13 +3,12 @@
 {% block content %}
   <div class="page-heading">
     <div>
-      <div class="eyebrow">YOUR STUDENT ACCOUNT</div>
       <h1>Application status</h1>
       <p>Review the status of your student registration.</p>
     </div>
   </div>
   <section class="panel form-panel">
-    <span class="badge-soft {% if user.approval_status == 'PENDING' %}warning{% elif user.approval_status == 'REJECTED' %}danger{% endif %}">{{ user.get_approval_status_display }}</span>
+    <span class="badge-soft badge-state {% if user.approval_status == 'PENDING' %}warning{% elif user.approval_status == 'REJECTED' %}danger{% endif %}">{{ user.get_approval_status_display }}</span>
     <h2 class="mt-4">
       {% if user.approval_status == 'APPROVED' %}
         You’re all set.
@@ -19,19 +18,35 @@
         Your application is being reviewed.
       {% endif %}
     </h2>
-    <p class="text-muted">
-      {% if user.approval_status == 'APPROVED' %}
-        Your student account is approved. You can now explore courses and enroll.
-      {% elif user.approval_status == 'REJECTED' %}
-        {{ user.rejection_reason }}
-      {% else %}
-        An administrator will review your account. Refresh this page to check for an update.
-      {% endif %}
-    </p>
     {% if user.approval_status == 'APPROVED' %}
+      <p class="text-muted">Your student account is approved. You can now explore courses and enroll.</p>
       <a class="btn btn-primary" href="{% url 'home' %}">Open your workspace →</a>
+    {% elif user.approval_status == 'REJECTED' %}
+      <div class="callout danger mt-3">
+        <p>
+          <span class="callout-title">Reason from the administrator</span>
+          {{ user.rejection_reason }}
+        </p>
+      </div>
+      <h3 class="h6 mt-4">What you can do</h3>
+      <ul class="consequence-list text-muted">
+        <li>Contact the study office and mention the email address you registered with: {{ user.email }}.</li>
+        <li>An administrator can review and approve your application later. You do not need to register again.</li>
+        <li>Check this page again after you have been in touch.</li>
+      </ul>
+      <div class="form-actions">
+        <a class="btn btn-outline-secondary" href="{% url 'accounts:status' %}">Refresh status</a>
+      </div>
     {% else %}
-      <a class="btn btn-outline-secondary" href="{% url 'accounts:status' %}">Refresh status</a>
+      <p class="text-muted">An administrator reviews new student applications.</p>
+      <h3 class="h6 mt-4">What happens next</h3>
+      <ul class="consequence-list text-muted">
+        <li>When your application is approved, you receive a student number and can enroll in courses.</li>
+        <li>No email is sent. Refresh this page to check for an update.</li>
+      </ul>
+      <div class="form-actions">
+        <a class="btn btn-outline-secondary" href="{% url 'accounts:status' %}">Refresh status</a>
+      </div>
     {% endif %}
   </section>
 {% endblock %}

@@ -51,7 +51,7 @@ def transcript(request):
                     enrollment.offering.course.title,
                     summary["average"],
                     summary["missing"],
-                    summary["final"].value if summary["final"] else "Not published",
+                    summary["final"].value if summary["final"] else "Not yet published",
                 ]
             )
         return csv_response(
@@ -61,7 +61,7 @@ def transcript(request):
                 "Course code",
                 "Course",
                 "Current average",
-                "Missing grades",
+                "Not yet graded",
                 "Final grade",
             ],
             rows,
@@ -97,7 +97,7 @@ def gradebook_csv(request, pk):
                 *[grades.get(a.pk, "Not graded") for a in assessments],
                 summary["average"],
                 summary["missing"],
-                summary["final"].value if summary["final"] else "Not published",
+                summary["final"].value if summary["final"] else "Not yet published",
             ]
         )
     return csv_response(
@@ -108,7 +108,7 @@ def gradebook_csv(request, pk):
             "Email",
             *[a.title for a in assessments],
             "Current average",
-            "Missing grades",
+            "Not yet graded",
             "Final grade",
         ],
         rows,

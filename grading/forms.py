@@ -11,6 +11,13 @@ class AssessmentForm(StyledFormMixin, forms.ModelForm):
             "description": forms.Textarea(attrs={"rows": 3}),
             "due_date": forms.DateInput(attrs={"type": "date"}),
         }
+        help_texts = {
+            "title": "Shown to students, for example Midterm exam or Course project.",
+            "description": "Optional. Explain what students need to do.",
+            "due_date": "Optional. Shown to students on the course page.",
+            "display_order": "Controls the column order in the gradebook and on the course "
+            "page. Lower numbers appear first, for example 1, 2, 3.",
+        }
 
 
 class GradeCellForm(StyledFormMixin, forms.Form):
